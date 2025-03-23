@@ -1,23 +1,48 @@
-const { Command } = require("commander");
-const fs = require("fs");
-const program = new Command();
+const express = require("express");
+const app = express();
 
-program
-  .name("counter")
-  .description("CLI to do file based task")
-  .version("0.8.0");
+let users = [
+  {
+    name: "John",
+    kidneys: [
+      {
+        healthy: true,
+      },
+      {
+        healthy: false,
+      },
+    ],
+  },
+];
+app.use(express.json());
 
-program
-  .command("count")
-  .description("count the number of characters in a string")
-  .argument("<files>", "file name characters to count")
-  .action((file)=>{
-    fs.readFile(file,'utf8',(err,data)=>{
-        if(err) console.error(err);
-        else{
-            const lines = data.split('\n').length;
-            console.log(`There are ${lines} lines in ${file}`)
-        }
-    })
-  })
-  program.parse();
+app.get("/", function (req, res) {
+  const johnKidneys = users[0].kidneys;
+  const numofKidneys = johnKidneys.length;
+  const numofHealthyKidneys = johnKidneys.filter(
+    (kideny) => kideny.healthy
+  ).length;
+  const numofunhealthyKidneys = numofKidneys - numofHealthyKidneys;
+
+  res.json({ numofKidneys, numofHealthyKidneys, numofunhealthyKidneys });
+});
+
+app.post("/", (req, res) => {
+  const isHealthy = req.body.isHealthy;
+  users[0].kidneys.push({
+    healthy: isHealthy,
+  });
+  res.json({
+    msg: "Done",
+  });
+});
+app.put("/", (req, res) => {
+  users[0].kidneys = users[0].kidneys.map(kidney=>({...kidney,healthy:true}));
+  res.json({});
+});
+app.delete("/", (req, res) => {
+  users[0].kidneys = users[0].kidneys.filter(kidney=>kidney.healthy);
+  res.json("done");
+});
+
+app.listen(3000);
