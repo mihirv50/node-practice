@@ -1,48 +1,54 @@
-const express = require("express");
+const express = require('express');
 const app = express();
 
-let users = [
-  {
-    name: "John",
-    kidneys: [
-      {
-        healthy: true,
-      },
-      {
-        healthy: false,
-      },
-    ],
-  },
-];
 app.use(express.json());
 
-app.get("/", function (req, res) {
-  const johnKidneys = users[0].kidneys;
-  const numofKidneys = johnKidneys.length;
-  const numofHealthyKidneys = johnKidneys.filter(
-    (kideny) => kideny.healthy
-  ).length;
-  const numofunhealthyKidneys = numofKidneys - numofHealthyKidneys;
+let todo = [
+    { id: 1, task: "Wake up at 8am" }
+];
 
-  res.json({ numofKidneys, numofHealthyKidneys, numofunhealthyKidneys });
+// GET: Retrieve all tasks
+app.get("/", (req, res) => {
+    res.json(todo);
 });
 
+// POST: Add a new task
 app.post("/", (req, res) => {
-  const isHealthy = req.body.isHealthy;
-  users[0].kidneys.push({
-    healthy: isHealthy,
-  });
-  res.json({
-    msg: "Done",
-  });
-});
-app.put("/", (req, res) => {
-  users[0].kidneys = users[0].kidneys.map(kidney=>({...kidney,healthy:true}));
-  res.json({});
-});
-app.delete("/", (req, res) => {
-  users[0].kidneys = users[0].kidneys.filter(kidney=>kidney.healthy);
-  res.json("done");
+    const { id, task } = req.body;
+    if (!id || !task) {
+        return res.status(400).json({ error: "ID and task are required" });
+    }
+    todo.push({ id, task });
+    res.json({ message: "Task added successfully", todo });
 });
 
-app.listen(3000);
+// PUT: Update a specific task by ID
+app.put("/", (req, res) => {
+    const { id, task } = req.body;
+    if (!id || !task) {
+        return res.status(400).json({ error: "ID and task are required for updating" });
+    }
+    todo = todo.map(t => (t.id === id ? { ...t, task } : t));
+    res.json({ message: "Task updated successfully", todo });
+});
+
+// DELETE: Remove a specific task by ID
+app.delete("/", (req, res) => {
+    const id = parseInt(req.query.id);
+    if (!id) {
+        return res.status(400).json({ error: "ID is required for deletion" });
+    }
+    const initialLength = todo.length;
+    todo = todo.filter(t => t.id !== id);
+    
+    if (todo.length === initialLength) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+
+    res.json({ message: "Task deleted successfully", todo });
+});
+
+// Start the server
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
