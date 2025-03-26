@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 
 
-app.get("/sum",(req,res)=>{
-    let {a,b} = req.query;
+app.get("/sum/:a/:b",(req,res)=>{
+    let {a,b} = req.params;
     a = Number(a);
     b = Number(b);
     let ans = a+b;
@@ -11,8 +11,8 @@ app.get("/sum",(req,res)=>{
         result:ans
     });
 })
-app.get("/substract",(req,res)=>{
-    let {a,b} = req.query;
+app.get("/substract/:a/:b",(req,res)=>{
+    let {a,b} = req.params;
     a = Number(a);
     b = Number(b);
     let ans = a-b;
@@ -20,8 +20,8 @@ app.get("/substract",(req,res)=>{
         result: ans
     });
 })
-app.get("/multiply",(req,res)=>{
-    let {a,b} = req.query;
+app.get("/multiply/:a/:b",(req,res)=>{
+    let {a,b} = req.params;
     a = Number(a);
     b = Number(b);
     let ans = a*b;
@@ -29,8 +29,8 @@ app.get("/multiply",(req,res)=>{
         result: ans
     });
 })
-app.get("/divide",(req,res)=>{
-    let {a,b} = req.query;
+app.get("/divide/:a/:b",(req,res)=>{
+    let {a,b} = req.params;
     a = Number(a);
     b = Number(b);
     if(b===0){
