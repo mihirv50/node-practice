@@ -1,67 +1,119 @@
 const express = require("express");
 const app = express();
 
-let requestCount = 0;
+let users = [];
 
-app.use((req, res, next) => {
-  requestCount += 1;
-    next();
-});
+// Random Token
+const generateToken = () => {
+  const options = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+  ];
+  let token = "";
+  for (let i = 0; i < 32; i++) {
+    token += options[Math.floor(Math.random() * options.length)];
+  }
+  return token;
+};
 
-// Middleware to log the method , timestamp and url
+app.use(express.json());
 
-app.use((req,res,next)=>{
-  const method = req.method;
-  const url = req.url;
-  const timestamp = new Date().toISOString();;
-  console.log(`[${timestamp}] ${method} ${url}`);
-  next();
-})
-
-app.get("/count",(req,res)=>{
+// Signup End point
+app.post("/signup", (req, res) => {
+  let { username, password } = req.body;
+  if (users.find((u) => u.username === username)) {
     res.json({
-        count:requestCount
-    })
-})
-app.get("/sum/:a/:b", (req, res) => {
-  let { a, b } = req.params;
-  a = Number(a);
-  b = Number(b);
-  let ans = a + b;
-  res.send({
-    result: ans,
-  });
-});
-app.get("/substract/:a/:b", (req, res) => {
-  let { a, b } = req.params;
-  a = Number(a);
-  b = Number(b);
-  let ans = a - b;
-  res.send({
-    result: ans,
-  });
-});
-app.get("/multiply/:a/:b", (req, res) => {
-  let { a, b } = req.params;
-  a = Number(a);
-  b = Number(b);
-  let ans = a * b;
-  res.send({
-    result: ans,
-  });
-});
-app.get("/divide/:a/:b", (req, res) => {
-  let { a, b } = req.params;
-  a = Number(a);
-  b = Number(b);
-  if (b === 0) {
-    return res.status(400).json({
-      error: "Cannot divide by 0",
+      msg: "Already signed up",
+      
+    });
+  } else {
+    users.push({
+      username: username,
+      password: password,
+    });
+    res.json({
+      msg: "you are signed in",
+      data:users
     });
   }
-  let ans = Math.floor(a / b);
-  res.send({
-    result: ans,
-  });
 });
+//SignIn end point
+app.post("/signin", (req, res) => {
+  const { username, password } = req.body;
+  const foundUser = users.find(
+    (u) => u.username === username && u.password === password
+  );
+  if (foundUser) {
+    const token = generateToken();
+    foundUser.token = token;
+    res.json({
+      msg: token,
+    });
+  } else {
+    res.status(403).send({
+      msg: "Inavalid username or Password",
+    });
+  }
+});
+
 app.listen(3000);
