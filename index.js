@@ -7,6 +7,17 @@ app.use((req, res, next) => {
   requestCount += 1;
     next();
 });
+
+// Middleware to log the method , timestamp and url
+
+app.use((req,res,next)=>{
+  const method = req.method;
+  const url = req.url;
+  const timestamp = new Date().toISOString();;
+  console.log(`[${timestamp}] ${method} ${url}`);
+  next();
+})
+
 app.get("/count",(req,res)=>{
     res.json({
         count:requestCount
