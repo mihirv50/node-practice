@@ -92,10 +92,10 @@ app.post("/signup", (req, res) => {
       password: password,
     });
     res.json({
-      msg: "you are signed in",
-      data:users
+      msg: "you are signed up",
     });
   }
+  console.log(users);
 });
 //SignIn end point
 app.post("/signin", (req, res) => {
@@ -114,6 +114,23 @@ app.post("/signin", (req, res) => {
       msg: "Inavalid username or Password",
     });
   }
+  console.log(users);
 });
+
+// User Profile --> Authenticated endpoint
+
+app.get("/me",(req,res)=>{
+  const token = req.headers.token;
+  let foundUser = users.find(u=>u.token===token);
+  if(foundUser){
+    res.json({
+      username:foundUser.username,
+    })
+  }else{
+    res.status(404).send({
+      msg:Invalid
+    })
+  }
+})
 
 app.listen(3000);
