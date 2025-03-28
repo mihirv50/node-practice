@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
-const jwt = require('jsonwebtoken');
-const JWT_SECRET = "randommihir"
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = "randommihir";
 
 let users = [];
 
@@ -80,13 +80,30 @@ let users = [];
 
 app.use(express.json());
 
+// Auth Middleware
+const auth = ((req, res, next) => {
+  const { token } = req.headers;
+  try {
+    const decodedData = jwt.verify(token, JWT_SECRET);
+    if (decodedData.username) {
+      req.username = decodedData.username;
+      next();
+    } else {
+      res.status(404).send({
+        msg: "Invalid data",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 // Signup End point
 app.post("/signup", (req, res) => {
   let { username, password } = req.body;
   if (users.find((u) => u.username === username)) {
     res.json({
       msg: "Already signed up",
-      
     });
   } else {
     users.push({
@@ -107,9 +124,12 @@ app.post("/signin", (req, res) => {
   );
   if (foundUser) {
     // const token = generateToken();
-    const token = jwt.sign({
-      username:username
-    },JWT_SECRET)
+    const token = jwt.sign(
+      {
+        username: username,
+      },
+      JWT_SECRET
+    );
     // foundUser.token = token; --> using jwt now
     res.json({
       msg: token,
@@ -124,20 +144,17 @@ app.post("/signin", (req, res) => {
 
 // User Profile --> Authenticated endpoint
 
-app.get("/me",(req,res)=>{
-  const token = req.headers.token;
-  const decodedinformation = jwt.verify(token,JWT_SECRET);
-  const username = decodedinformation.username;
-  let foundUser = users.find(u=>u.username===username);
-  if(foundUser){
+app.get("/me",auth,  (req, res) => {
+  let foundUser = users.find((u) => u.username === req.username);
+  if (foundUser) {
     res.json({
-      username:foundUser.username,
-    })
-  }else{
+      username: foundUser.username,
+    });
+  } else {
     res.status(404).send({
-      msg:Invalid
-    })
+      msg: "Invalid Username or Password",
+    });
   }
-})
+});
 
 app.listen(3000);
