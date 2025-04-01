@@ -1,8 +1,10 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 const app = express();
 const { userModel, todoModel } = require("./userModel");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = "randommihir";
+const {z} = require('zod')
 
 app.use(express.json());
 
@@ -22,12 +24,33 @@ const auth = (req, res, next) => {
 };
 
 app.post("/signup", async (req, res) => {
+  const requiredBody = z.object({
+    email: z.string().min(3).max(15).email(),
+    name: z.string().min(3).max(20),
+    password: z.string().min(8).max(20)
+  })
+  // const parsedData = requiredBody.parse(req.body)
+  //OR
+  const parsedDataWithSuccess = requiredBody.safeParse(req.body);
+  if(!parsedDataWithSuccess.success){
+      res.json({
+        msg:"Incorrect format",
+        error:parsedDataWithSuccess.error
+      })
+      return
+  }
   const { name, email, password } = req.body;
-  await userModel.create({
-    name: name,
-    email: email,
-    password: password,
-  });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 5);
+    await userModel.create({
+      name: name,
+      email: email,
+      password: hashedPassword,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
   res.json({
     msg: "You are signed Up",
   });
@@ -36,10 +59,15 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await userModel.findOne({
     email: email,
-    password: password,
   });
+  if (!user) {
+    res.status(403).json({
+      msg: "User does not exist",
+    });
+  }
+  const passwordMatch = await bcrypt.compare(password, user.password);
   console.log(user);
-  if (user) {
+  if (passwordMatch) {
     const token = jwt.sign(
       {
         id: user._id,
@@ -56,12 +84,12 @@ app.post("/login", async (req, res) => {
   }
 });
 app.post("/todo", auth, (req, res) => {
-  const {title} = req.body;
+  const { title } = req.body;
   const userId = req.userId;
   todoModel.create({
-    title:title,
-    userId:userId
-  })
+    title: title,
+    userId: userId,
+  });
   res.json({
     id: userId,
   });
@@ -69,11 +97,11 @@ app.post("/todo", auth, (req, res) => {
 app.get("/todos", auth, async (req, res) => {
   const userId = req.userId;
   const todos = await todoModel.find({
-    userId:userId
-  })
+    userId: userId,
+  });
   res.json({
-    todos
-  })
+    todos,
+  });
 });
 
 app.listen(3000);
